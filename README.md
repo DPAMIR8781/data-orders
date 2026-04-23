@@ -1,167 +1,201 @@
- Olist Orders Data Analysis & Feature Engineering
+#  Olist Orders Data Analysis & Feature Engineering
 
-This project focuses on building a clean, feature-rich dataset from raw Olist e-commerce data to enable downstream analytics and machine learning tasks.
+This project focuses on transforming raw Olist e-commerce data into a **clean, feature-rich dataset** ready for analytics and machine learning.
 
-The goal is to transform multiple relational datasets into a single training-ready table capturing order behavior, delivery performance, pricing, and customer satisfaction.
+The main objective is to aggregate multiple datasets into a **single order-level table** capturing delivery performance, pricing, and customer satisfaction.
 
- Project Objective
+---
 
-Create a unified dataset at order level containing:
+##  Project Objective
 
-Delivery performance metrics
-Customer review signals
-Order complexity (items & sellers)
-Pricing & freight cost
-Optional geographic distance feature
+Build a unified dataset including:
 
-This dataset can be used for:
+*  Delivery performance metrics
+*  Customer review behavior
+*  Order complexity (items & sellers)
+*  Pricing & freight cost
+*  Customer–seller distance (optional)
 
-Business analytics
-Machine Learning (e.g. review prediction)
-KPI tracking
-Dataset Overview
+---
 
-The project uses the following datasets:
+##  Dataset Overview
 
-orders
-order_items
-order_reviews
-customers
-sellers
-products
-geolocation
- Feature Engineering
-1.  Delivery Performance (get_wait_time)
+Datasets used:
 
-Features:
+* `orders`
+* `order_items`
+* `order_reviews`
+* `customers`
+* `sellers`
+* `products`
+* `geolocation`
 
-wait_time
-expected_wait_time
-delay_vs_expected
-order_status
+---
 
-✔ Only delivered orders are considered
-✔ Datetime conversions applied
-✔ Delay calculated as:
+##  Feature Engineering
 
-delay = max(actual_delivery - estimated_delivery, 0)
-2.  Review Score (get_review_score)
+###  Delivery Performance (`get_wait_time`)
 
-Features:
+* `wait_time`
+* `expected_wait_time`
+* `delay_vs_expected`
+* `order_status`
 
-review_score
-dim_is_five_star
-dim_is_one_star
+✔ Only **delivered orders** are included
+✔ Datetime transformations applied
 
-✔ Binary flags for extreme satisfaction levels
+---
 
-3.  Number of Items (get_number_items)
-number_of_items = count(order_item_id)
+###  Review Score (`get_review_score`)
 
-✔ Measures order size / complexity
+* `review_score`
+* `dim_is_five_star`
+* `dim_is_one_star`
 
-4.  Number of Sellers (get_number_sellers)
-number_of_sellers = unique(seller_id)
+✔ Binary indicators for extreme satisfaction
 
-✔ Indicates multi-seller orders
+---
 
-5.  Price & Freight (get_price)
+###  Number of Items (`get_number_items`)
 
-Features:
+* Total number of products per order
 
-price
-freight_value
+---
 
-✔ Aggregated per order:
+###  Number of Sellers (`get_number_sellers`)
 
-price = sum(price)
-freight_value = sum(freight_value)
-6.  Distance (Optional) (get_distance_seller_customer)
-Uses Haversine formula
-Computes distance between:
-Customer location
-Seller location
+* Unique sellers per order
 
-✔ If multiple sellers → average distance per order
+---
 
-Final Dataset (get_training_data)
+###  Price & Freight (`get_price`)
+
+* `price` → total order value
+* `freight_value` → total shipping cost
+
+---
+
+###  Distance (`get_distance_seller_customer`)
+
+* Distance between customer and seller (km)
+* Calculated using **Haversine formula**
+* Averaged per order (if multiple sellers)
+
+---
+
+##  Final Dataset (`get_training_data`)
 
 All features are merged into a single DataFrame:
 
-training = (
-    wait_time
-    + review_score
-    + number_of_items
-    + number_of_sellers
-    + price
-)
+* Joined on `order_id`
+* Missing values removed
+* Ready for ML / analytics
 
-✔ Final step:
+---
 
-Drop missing values
-Reset index
+##  Final Features
 
-Final Features
-Feature	Description
-order_id	Unique order ID
-wait_time	Delivery duration
-expected_wait_time	Estimated delivery time
-delay_vs_expected	Delay vs estimation
-review_score	Customer rating
-dim_is_five_star	5-star flag
-dim_is_one_star	1-star flag
-number_of_items	Total items
-number_of_sellers	Unique sellers
-price	Total price
-freight_value	Shipping cost
-distance_seller_customer	Distance (optional)
+| Feature                  | Description        |
+| ------------------------ | ------------------ |
+| order_id                 | Unique order ID    |
+| wait_time                | Delivery duration  |
+| expected_wait_time       | Estimated delivery |
+| delay_vs_expected        | Delay vs estimate  |
+| review_score             | Customer rating    |
+| dim_is_five_star         | 5-star flag        |
+| dim_is_one_star          | 1-star flag        |
+| number_of_items          | Total items        |
+| number_of_sellers        | Unique sellers     |
+| price                    | Total price        |
+| freight_value            | Shipping cost      |
+| distance_seller_customer | Distance (km)      |
 
- Key Insight (Distance Analysis)
-Mean distance ≈ 600 km
-Median distance ≈ 433 km
-Long-tail distribution (some orders > 8000 km)
+---
 
-Indicates:
+##  Visual Insights
 
-Wide geographic coverage
-Potential impact on delivery time & satisfaction
+###  Distance Distribution
 
- Testing
+![Distance Histogram](images/distance_histogram.png)
 
-All features are validated using pytest:
+###  Review Score Distribution
 
-✔ wait_time → PASSED
-✔ review_score → PASSED
-✔ number_items → PASSED
-✔ number_sellers → PASSED
-✔ price → PASSED
-✔ training_data → PASSED
-✔ distance → PASSED
+![Review Score](images/review_score_distribution.png)
 
-Tech Stack
-Python
-Pandas
-NumPy
-Seaborn / Matplotlib
-Pytest
+###  Wait Time vs Delay
 
-How to Run
-git clone <repo>
+![Wait vs Delay](images/wait_time_vs_delay.png)
+
+---
+
+##  Key Insights
+
+*  Majority of orders receive **5-star reviews**
+*  Longer delivery times increase **delay risk**
+*  Multi-seller orders introduce complexity
+*  Distance shows a **long-tail distribution** (up to ~8000+ km)
+*  Logistics performance directly impacts customer satisfaction
+
+---
+
+##  Testing
+
+All features are validated with **pytest**:
+
+* ✔ wait_time
+* ✔ review_score
+* ✔ number_items
+* ✔ number_sellers
+* ✔ price
+* ✔ training_data
+* ✔ distance
+
+---
+
+##  Tech Stack
+
+* Python 🐍
+* Pandas
+* NumPy
+* Seaborn & Matplotlib
+* Pytest
+
+---
+
+##  How to Run
+
+```bash
+git clone <your-repo-link>
 cd data-orders
 
 pip install -r requirements.txt
 
 pytest -v
-Business Value
+```
+
+---
+
+## Business Value
 
 This dataset enables:
 
-Delivery delay analysis
-Customer satisfaction modeling
-Price vs review relationship
-Distance impact on logistics
+*  Delivery delay analysis
+*  Customer satisfaction modeling
+*  Price vs review relationship
+*  Distance impact on logistics
 
-Author
+---
+
+##  Author
 
 Doruk Pamir
 Data Analyst
+
+---
+
+##  Next Steps
+
+* Machine Learning model (review prediction)
+* Feature importance analysis
+* Power BI dashboard
+* Advanced EDA & storytelling
